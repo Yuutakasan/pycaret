@@ -66,8 +66,7 @@ claude-flow
 # Removed Windows wrapper files per user request
 hive-mind-prompt-*.txt
 
-# Work directory - exclude cache and auto-generated files
-work/output/
+# Work directory - exclude cache files
 work/.holidays_cache.csv
 work/cache/
 

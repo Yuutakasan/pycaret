@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>店舗ダッシュボード - 58738:ＴＸ秋葉原駅</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #667eea;
+        }
+        .date {
+            color: #999;
+            font-size: 14px;
+        }
+        .sales-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .sales-amount {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .comparison {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+        .comparison-item {
+            text-align: center;
+        }
+        .comparison-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .comparison-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .alert.success {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        .section {
+            margin: 25px 0;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        .product-list {
+            list-style: none;
+            padding: 0;
+        }
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .product-rank {
+            background: #667eea;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            .sales-amount {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏪 58738:ＴＸ秋葉原駅</h1>
+            <div class="date">2025年09月30日</div>
+        </div>
+
+        <div class="sales-card">
+            <div style="font-size: 16px; opacity: 0.9;">本日売上</div>
+            <div class="sales-amount">¥331,116</div>
+            <div class="comparison">
+                <div class="comparison-item">
+                    <div class="comparison-label">前日比</div>
+                    <div class="comparison-value">-1.1%</div>
+                </div>
+                <div class="comparison-item">
+                    <div class="comparison-label">前年比</div>
+                    <div class="comparison-value">+0.0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert success">✅ アラートなし - 順調です</div>
+
+        <div class="section">
+            <div class="section-title">📊 本日のTOP 5商品</div>
+            <ul class="product-list">
+                <li class="product-item"><div><span class="product-rank">1</span>センティアＩブラック</div><div style="font-weight: bold;">¥6,266</div></li><li class="product-item"><div><span class="product-rank">2</span>テリアミント</div><div style="font-weight: bold;">¥5,808</div></li><li class="product-item"><div><span class="product-rank">3</span>テリアメンソール</div><div style="font-weight: bold;">¥5,280</div></li><li class="product-item"><div><span class="product-rank">4</span>シングルモルト山崎１８０</div><div style="font-weight: bold;">¥3,900</div></li><li class="product-item"><div><span class="product-rank">5</span>◎天然水新潟県津南６００</div><div style="font-weight: bold;">¥3,850</div></li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; color: #999; font-size: 12px;">
+            自動生成: 2025-10-08 18:33
+        </div>
+    </div>
+</body>
+</html>
