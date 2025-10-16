@@ -548,14 +548,14 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     parser.add_argument(
         "--input-dir",
         type=str,
-        default="work/input",
-        help="入力ディレクトリ（デフォルト: work/input）",
+        default="input",
+        help="入力ディレクトリ（デフォルト: input）",
     )
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="work/output",
-        help="出力ディレクトリ（デフォルト: work/output）",
+        default="output",
+        help="出力ディレクトリ（デフォルト: output）",
     )
     parser.add_argument(
         "--single-file",
