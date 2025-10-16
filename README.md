@@ -141,94 +141,182 @@ python3 batch_convert.py
 ```
 pycaret_tsukuba2025/
 │
-├── work/                                    # メイン作業ディレクトリ
-│   ├── input/                               # 入力データ（Excelファイル）
-│   ├── output/                              # 出力CSV（自動生成）
+├── work/                                    # 🎯 メイン作業ディレクトリ（ここで作業）
+│   ├── input/                               # Excelファイル配置場所
+│   ├── output/                              # CSV出力先（自動生成）
 │   │
-│   ├── batch_convert.py                     # Excel→CSV変換パイプライン ⭐
+│   ├── batch_convert.py                     # ⭐ Excel→CSV変換スクリプト
 │   ├── work_utils.py                        # 共通ユーティリティ
 │   ├── stores.csv                           # 15店舗マスタ（緯度経度）
 │   │
-│   ├── 特徴量AutoViz_PyCaret_v1.ipynb        # AI販売数量予測システム ⭐⭐⭐
-│   ├── 店舗別包括ダッシュボード_v6.1_提案強化.ipynb  # 統合ダッシュボード ⭐⭐
+│   ├── 特徴量AutoViz_PyCaret_v1.ipynb        # ⭐⭐⭐ AI販売数量予測（メイン）
+│   ├── 店舗別包括ダッシュボード_v6.1_提案強化.ipynb  # ⭐⭐ 統合ダッシュボード
 │   │
 │   ├── docs/                                # ドキュメント
 │   ├── scripts/                             # ユーティリティスクリプト
 │   └── old/                                 # 開発履歴（アーカイブ）
 │
-├── Docker_files/pycaret_full/               # Docker GPU環境
+├── Docker_files/pycaret_full/               # 🐳 Docker GPU環境
 │   ├── Dockerfile                           # イメージ定義
 │   ├── docker-compose.yml                   # コンテナ設定
-│   ├── check_gpu_rapids_environment.py      # 環境検証スクリプト
-│   ├── build_and_run.sh                     # ビルド・起動スクリプト
-│   └── build_fast.sh                        # キャッシュビルド
+│   ├── check_gpu_rapids_environment.py      # 環境検証
+│   └── *.sh                                 # ビルドスクリプト
 │
-├── src/                                     # 分析モジュール
-│   ├── analysis/                            # 分析ロジック
-│   ├── engine/                              # アラートエンジン
-│   ├── models/                              # 需要予測モデル
-│   ├── validation/                          # データ品質検証
-│   └── visualization/                       # 可視化
-│
+├── pycaret/                                 # PyCaret本体（変更不要）
+├── src/                                     # 追加分析モジュール
 ├── tests/                                   # テストスイート
 ├── docs/                                    # プロジェクトドキュメント
-├── examples/                                # サンプルコード
-├── scripts/                                 # 運用スクリプト
 │
 ├── README.md                                # このファイル
 ├── AGENTS.md                                # 開発ガイドライン
-├── CLAUDE.md                                # Claude Code設定
-└── .gitignore                               # Git除外設定
+└── CLAUDE.md                                # Claude Code設定
 ```
 
 ---
 
-## 🔄 ワークフロー
+## 🔄 実行手順（詳細版）
 
-### 完全な処理フロー
+### ステップ1: データ準備
 
+```bash
+# Excelファイルを work/input/ に配置
+# 対象ファイル:
+#  - 01_【売上情報】店別実績_*.xlsx
+#  - 06_【POS情報】店別－商品別実績_*.xlsx
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  1. データ準備                                                │
-│     Excel → work/input/                                      │
-└────────────────┬────────────────────────────────────────────┘
-                 ↓
-┌─────────────────────────────────────────────────────────────┐
-│  2. Excel → CSV 変換                                         │
-│     $ python3 batch_convert.py                              │
-│     ・ワイド→ロング形式変換                                   │
-│     ・集計行除去、欠損値処理                                  │
-│     → output/*.csv                                          │
-└────────────────┬────────────────────────────────────────────┘
-                 ↓
-┌─────────────────────────────────────────────────────────────┐
-│  3. Docker起動                                               │
-│     $ cd Docker_files/pycaret_full                          │
-│     $ docker-compose up -d                                  │
-│     → http://localhost:8888                                 │
-└────────────────┬────────────────────────────────────────────┘
-                 ↓
-┌─────────────────────────────────────────────────────────────┐
-│  4. JupyterLabで分析実行                                     │
-│                                                             │
-│  【ノートブック1】特徴量AutoViz_PyCaret_v1.ipynb             │
-│     ・Step 1-3: データ読み込みと前処理                        │
-│     ・Step 4: 250+特徴量生成（カレンダー、天気、時系列）       │
-│     ・Step 5: PyCaret GPU学習（XGBoost/CatBoost）            │
-│     ・Step 6-1: 全店舗×全商品×7日の予測マトリクス生成          │
-│     ・Step 6-2: GPU バッチ予測実行（10,000件/batch）         │
-│     ・Step 6-3: 発注表CSV出力                                │
-│       - 発注表_全店舗_YYYY-MM-DD_to_YYYY-MM-DD.csv          │
-│       - 発注表_YYYY-MM-DD.csv × 7日分                        │
-│       - 発注表_店舗XX.csv × 15店舗分                         │
-│       - 商品別サマリー_TOP100.csv                            │
-│                                                             │
-│  【ノートブック2】店舗別包括ダッシュボード_v6.1_提案強化.ipynb  │
-│     ・店舗パフォーマンス分析                                  │
-│     ・ABC分析と在庫最適化                                     │
-│     ・経営サマリーレポート                                    │
-└─────────────────────────────────────────────────────────────┘
+
+### ステップ2: Excel → CSV 変換
+
+```bash
+# workディレクトリに移動
+cd work
+
+# 全Excelファイルを一括変換
+python3 batch_convert.py
+
+# 実行結果:
+#  ✓ work/output/ にCSVファイル生成
+#  ✓ 01_【売上情報】店別実績_*.csv
+#  ✓ 06_【POS情報】店別－商品別実績_*.csv
 ```
+
+**💡 Tips:**
+- デバッグモード: `python3 batch_convert.py --debug`
+- 単一ファイル: `python3 batch_convert.py --single-file "ファイル名.xlsx"`
+
+### ステップ3: Docker環境起動
+
+```bash
+# Dockerディレクトリに移動
+cd ../Docker_files/pycaret_full
+
+# コンテナ起動（初回は自動ビルド）
+docker-compose up -d
+
+# 起動確認
+docker logs rapids_pycaret_notebook
+
+# 期待される出力:
+#  🚀 RAPIDS + PyCaret GPU環境を起動中...
+#  📊 環境チェック中...
+#  ✅ GPU ハードウェア: NVIDIA GeForce RTX 3080 Ti (12GB)
+#  ✅ XGBoost 3.0.5: GPU対応
+#  ...
+#  📓 JupyterLabを起動します...
+```
+
+**ブラウザでアクセス:** http://localhost:8888
+
+### ステップ4: AI販売数量予測の実行
+
+JupyterLabで `/home/rapids/work/特徴量AutoViz_PyCaret_v1.ipynb` を開く
+
+#### 📝 各セルの実行順序:
+
+**Step 1: ライブラリインポート**
+```python
+# 実行: Shift + Enter
+# 所要時間: 10秒
+```
+
+**Step 2-3: データ読み込み**
+```python
+# output/06_*.csv から商品別POSデータ読み込み
+# stores.csvと結合
+# 所要時間: 30秒
+```
+
+**Step 4: 250+特徴量生成**
+```python
+# カレンダー特徴（祝日、連休、給料日など）
+# 気象特徴（天気API呼び出し）
+# 時系列特徴（ラグ、移動平均、トレンド）
+# 所要時間: 5-10分（天気API取得含む）
+```
+
+**Step 5: PyCaret GPU学習**
+```python
+from pycaret.regression import *
+
+# Setup（GPU使用）
+setup(data=train_data, target='qty', use_gpu=True)
+
+# モデル比較・学習
+best = compare_models(n_select=3)
+final = finalize_model(best[0])
+
+# 所要時間: 2-5分（GPU使用時）
+```
+
+**Step 6-1: 予測マトリクス生成**
+```python
+# 全店舗(15) × 全商品(N) × 7日間 の組み合わせ生成
+# 各店舗の天気データ取得
+# 所要時間: 3-5分
+```
+
+**Step 6-2: GPU バッチ予測**
+```python
+BATCH_SIZE = 10000
+# 大量データをバッチ処理で高速予測
+# 所要時間: 1-2分（GPU使用時）
+```
+
+**Step 6-3: 発注表CSV出力** ⭐
+```python
+# 以下のファイルが自動生成されます:
+#  📄 発注表_全店舗_2025-10-15_to_2025-10-21.csv (統合版)
+#  📄 発注表_2025-10-15.csv ... 2025-10-21.csv (7日分)
+#  📄 発注表_店舗1.csv ... 発注表_店舗15.csv (15店舗分)
+#  📄 商品別サマリー_TOP100.csv (売上TOP100)
+```
+
+### ステップ5（オプション）: ダッシュボード分析
+
+JupyterLabで `/home/rapids/work/店舗別包括ダッシュボード_v6.1_提案強化.ipynb` を開く
+
+```python
+# 実行内容:
+#  📊 店舗パフォーマンス分析
+#  📊 ABC分析と在庫最適化
+#  📊 経営サマリーレポート
+```
+
+---
+
+## ⏱️ 所要時間の目安
+
+| ステップ | CPU環境 | GPU環境 |
+|---------|--------|---------|
+| 1. データ準備 | 5分 | 5分 |
+| 2. Excel→CSV変換 | 2分 | 2分 |
+| 3. Docker起動 | 2分 | 2分 |
+| 4. 特徴量生成 | 15分 | 8分 |
+| 5. モデル学習 | 30分 | 3分 |
+| 6. 予測実行 | 20分 | 2分 |
+| **合計** | **約74分** | **約22分** |
+
+**GPU使用で 約70%の時間短縮！**
 
 ---
 
