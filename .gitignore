@@ -70,10 +70,6 @@ hive-mind-prompt-*.txt
 work/output/
 work/.holidays_cache.csv
 work/cache/
-# Exclude Excel data files but keep directory structure
-work/input/*.xlsx
-work/input/*.xls
-!work/input/.gitkeep
 
 # Docker cache and temporary files
 Docker_files/pycaret_full/cache/
