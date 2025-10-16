@@ -532,7 +532,12 @@ def parse_args(argv: Optional[Iterable[str]] = None) -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--debug", action="store_true", help="デバッグモード（詳細ログ＆追加処理）"
+        "--debug", action="store_true", help="デバッグモード（詳細ログ）"
+    )
+    parser.add_argument(
+        "--skip-features",
+        action="store_true",
+        help="特徴量付与をスキップ（CSV変換のみ実行）",
     )
     parser.add_argument(
         "--use-wide-to-long",
@@ -700,12 +705,15 @@ def main(argv: Optional[Iterable[str]] = None) -> None:
 
         logger.info("✅ 全ファイルの変換が完了しました")
 
-        if args.debug:
+        # 特徴量付与を実行（--skip-featuresが指定されていない場合）
+        if not args.skip_features:
             logger.info("")
             logger.info(DISPLAY_BREAK)
             logger.info("ステップ2: 特徴量付与を開始")
             logger.info(DISPLAY_BREAK)
             run_debug_steps(output_dir, logger)
+        else:
+            logger.info("特徴量付与をスキップしました（--skip-features指定）")
 
     except Exception as exc:
         if args.debug:
