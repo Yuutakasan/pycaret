@@ -1,0 +1,110 @@
+# Multi-stage build for PyCaret Dashboard
+# Optimized for production deployment
+
+#################################################
+# Stage 1: Base Python environment
+#################################################
+FROM python:3.10-slim as base
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app user
+RUN useradd -m -u 1000 -s /bin/bash appuser
+
+WORKDIR /app
+
+#################################################
+# Stage 2: Dependencies
+#################################################
+FROM base as dependencies
+
+# Copy requirements
+COPY requirements.txt requirements-dev.txt* ./
+
+# Install Python dependencies
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install -r requirements.txt && \
+    if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
+#################################################
+# Stage 3: Application
+#################################################
+FROM base as application
+
+# Copy Python dependencies from previous stage
+COPY --from=dependencies /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=dependencies /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY --chown=appuser:appuser . .
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/dashboard/output /app/.swarm && \
+    chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose dashboard port
+EXPOSE 8050
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8050/health || exit 1
+
+# Default command
+CMD ["python", "dashboard/dashboard.py", "--host", "0.0.0.0", "--port", "8050"]
+
+#################################################
+# Stage 4: Production (optimized)
+#################################################
+FROM application as production
+
+# Additional production optimizations
+ENV ENVIRONMENT=production \
+    LOG_LEVEL=INFO \
+    WORKERS=4
+
+# Use gunicorn for production
+RUN pip install gunicorn
+
+CMD ["gunicorn", \
+    "--bind", "0.0.0.0:8050", \
+    "--workers", "4", \
+    "--timeout", "300", \
+    "--access-logfile", "/app/logs/access.log", \
+    "--error-logfile", "/app/logs/error.log", \
+    "dashboard.dashboard:server"]
+
+#################################################
+# Stage 5: Development
+#################################################
+FROM application as development
+
+# Install development tools
+RUN pip install --no-cache-dir \
+    pytest \
+    pytest-cov \
+    black \
+    flake8 \
+    mypy \
+    ipython
+
+# Development settings
+ENV ENVIRONMENT=development \
+    DEBUG=true
+
+CMD ["python", "dashboard/dashboard.py", "--host", "0.0.0.0", "--port", "8050", "--debug"]

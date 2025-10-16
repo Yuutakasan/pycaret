@@ -65,3 +65,25 @@ coordination/orchestration/*
 claude-flow
 # Removed Windows wrapper files per user request
 hive-mind-prompt-*.txt
+
+# Work directory - exclude cache and auto-generated files
+work/output/
+work/.holidays_cache.csv
+work/cache/
+work/input/*.xlsx
+work/input/*.xls
+
+# Docker cache and temporary files
+Docker_files/pycaret_full/cache/
+Docker_files/pycaret_full/work/
+Docker_files/pycaret_full/jupyter_config/
+Docker_files/pycaret_full/.env
+
+# Coverage and test outputs
+coverage.xml
+
+# IDE specific files
+.cursor/
+.cursorindexingignore
+.specstory/
+@logging_template.mdc

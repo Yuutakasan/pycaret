@@ -1,0 +1,160 @@
+version: '3.8'
+
+services:
+  #################################################
+  # Dashboard Service
+  #################################################
+  dashboard:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dashboard
+      target: production
+    container_name: pycaret-dashboard
+    ports:
+      - "${DASHBOARD_PORT:-8050}:8050"
+    volumes:
+      - ../dashboard/output:/app/dashboard/output
+      - ../logs:/app/logs
+      - ../.swarm:/app/.swarm
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - WORKERS=${WORKERS:-4}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - pycaret-network
+    labels:
+      - "com.pycaret.service=dashboard"
+      - "com.pycaret.version=1.0.0"
+
+  #################################################
+  # Data Refresh Service
+  #################################################
+  data-refresh:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dashboard
+      target: application
+    container_name: pycaret-data-refresh
+    volumes:
+      - ../scripts:/app/scripts
+      - ../logs:/app/logs
+      - ../.swarm:/app/.swarm
+      - ../config:/app/config
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - WEBHOOK_URL=${WEBHOOK_URL:-}
+    command: ["python", "/app/scripts/data_refresh.py"]
+    restart: unless-stopped
+    networks:
+      - pycaret-network
+    depends_on:
+      - dashboard
+    labels:
+      - "com.pycaret.service=data-refresh"
+
+  #################################################
+  # Performance Monitor Service
+  #################################################
+  performance-monitor:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dashboard
+      target: application
+    container_name: pycaret-performance-monitor
+    volumes:
+      - ../scripts:/app/scripts
+      - ../logs:/app/logs
+      - ../.swarm:/app/.swarm
+      - ../config:/app/config
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+    command: ["python", "/app/scripts/performance_monitor.py"]
+    restart: unless-stopped
+    networks:
+      - pycaret-network
+    privileged: true
+    labels:
+      - "com.pycaret.service=performance-monitor"
+
+  #################################################
+  # Alert System Service
+  #################################################
+  alert-system:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dashboard
+      target: application
+    container_name: pycaret-alert-system
+    volumes:
+      - ../scripts:/app/scripts
+      - ../logs:/app/logs
+      - ../.swarm:/app/.swarm
+      - ../config:/app/config
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - WEBHOOK_URL=${WEBHOOK_URL:-}
+      - SMTP_SERVER=${SMTP_SERVER:-}
+      - SMTP_PORT=${SMTP_PORT:-25}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_TLS=${SMTP_TLS:-false}
+      - EMAIL_FROM=${EMAIL_FROM:-noreply@pycaret.org}
+    command: ["python", "/app/scripts/alert_system.py"]
+    restart: unless-stopped
+    networks:
+      - pycaret-network
+    depends_on:
+      - performance-monitor
+    labels:
+      - "com.pycaret.service=alert-system"
+
+  #################################################
+  # Nginx Reverse Proxy (optional)
+  #################################################
+  nginx:
+    image: nginx:alpine
+    container_name: pycaret-nginx
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../logs:/var/log/nginx
+      - ./ssl:/etc/nginx/ssl:ro
+    restart: unless-stopped
+    networks:
+      - pycaret-network
+    depends_on:
+      - dashboard
+    labels:
+      - "com.pycaret.service=nginx"
+    profiles:
+      - with-proxy
+
+#################################################
+# Networks
+#################################################
+networks:
+  pycaret-network:
+    driver: bridge
+    name: pycaret-network
+
+#################################################
+# Volumes (optional persistent storage)
+#################################################
+volumes:
+  logs:
+    driver: local
+  swarm-data:
+    driver: local
+  dashboard-output:
+    driver: local

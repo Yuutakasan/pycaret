@@ -1,0 +1,15 @@
+# 不要なファイルを除外してビルドコンテキストを最小化
+# work/ は含める（ノートブックとfont_setup.pyが必要）
+notebooks/
+cache/
+jupyter_config/
+*.log
+*.pyc
+__pycache__/
+.git/
+.gitignore
+# README.md は含める
+docker-compose*.yml
+start_*.sh
+Dockerfile.*
+*.broken_backup
