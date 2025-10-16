@@ -185,24 +185,35 @@ pycaret_tsukuba2025/
 #  - 06_【POS情報】店別－商品別実績_*.xlsx
 ```
 
-### ステップ2: Excel → CSV 変換
+### ステップ2: Excel → CSV 変換 + 特徴量付与
 
 ```bash
 # workディレクトリに移動
 cd work
 
-# 全Excelファイルを一括変換
+# 全Excelファイルを一括変換 + 特徴量生成（デフォルト）
 python3 batch_convert.py
+
+# 実行内容:
+#  ✓ Excel → CSV 変換（ワイド→ロング形式）
+#  ✓ 06ファイルの統合（merge_converted_06.py）
+#  ✓ データクリーンアップ（clean_06_data.py）
+#  ✓ 特徴量生成（enrich_features_v2.py）
+#    - カレンダー特徴量（曜日・祝日・イベント）
+#    - 天気特徴量（15店舗 × Open-Meteo API）
+#    - 時系列特徴量（ラグ・移動平均・傾向）
 
 # 実行結果:
 #  ✓ work/output/ にCSVファイル生成
 #  ✓ 01_【売上情報】店別実績_*.csv
 #  ✓ 06_【POS情報】店別－商品別実績_*.csv
+#  ✓ 06_final_enriched_*.csv（250+特徴量付き）
 ```
 
 **💡 Tips:**
 - デバッグモード: `python3 batch_convert.py --debug`
 - 単一ファイル: `python3 batch_convert.py --single-file "ファイル名.xlsx"`
+- CSV変換のみ（特徴量付与をスキップ）: `python3 batch_convert.py --skip-features`
 
 ### ステップ3: Docker環境起動
 
@@ -381,14 +392,21 @@ docker exec -it rapids_pycaret_notebook python3 check_gpu_rapids_environment.py
 
 ## 📊 使用方法
 
-### 1. データ変換
+### 1. データ変換と特徴量生成
 
 ```bash
 # work/input/ にExcelファイルを配置
 cd work
 
-# 全ファイル一括変換
+# 全ファイル一括変換 + 特徴量生成（デフォルト動作）
 python3 batch_convert.py
+# → Excel → CSV変換
+# → 06ファイル統合
+# → データクリーンアップ
+# → 250+特徴量生成
+
+# CSV変換のみ（特徴量付与をスキップ）
+python3 batch_convert.py --skip-features
 
 # デバッグモード（詳細ログ）
 python3 batch_convert.py --debug
