@@ -1,259 +1,486 @@
-<div align="center">
+# コンビニエンスストア売上予測・分析システム
 
-<img src="docs/images/logo.png" alt="drawing" width="200"/>
+PyCaret を利用したコンビニエンスストアの売上予測・データ分析プロジェクト
 
-## **An open-source, low-code machine learning library in Python**
-## 🎉🎉🎉 **PyCaret 3.4 is now available. 🎉🎉🎉**
-## `pip install --upgrade pycaret` </br>
+---
 
-<p align="center">
-<h3>
-  <a href="https://pycaret.gitbook.io/">Docs</a> •
-  <a href="https://pycaret.gitbook.io/docs/get-started/tutorials">Tutorials</a> •
-  <a href="https://pycaret.gitbook.io/docs/learn-pycaret/official-blog">Blog</a> •
-  <a href="https://www.linkedin.com/company/pycaret/">LinkedIn</a> •
-  <a href="https://www.youtube.com/channel/UCxA1YTYJ9BEeo50lxyI_B3g">YouTube</a> •
-    <a href="https://join.slack.com/t/pycaret/shared_invite/zt-row9phbm-BoJdEVPYnGf7_NxNBP307w">Slack</a>
-</h3>
-</p>
+## 📋 目次
 
-| Overview | |
-|---|---|
-| **CI/CD** | ![pytest on push](https://github.com/pycaret/pycaret/workflows/pytest%20on%20push/badge.svg) [![Documentation Status](https://readthedocs.org/projects/pip/badge/?version=stable)](http://pip.pypa.io/en/stable/?badge=stable) |
-| **Code** |  [![!pypi](https://img.shields.io/pypi/v/pycaret?color=orange)](https://pypi.org/project/pycaret/) [![!python-versions](https://img.shields.io/badge/Python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue)](https://badge.fury.io/py/pycaret) [![!black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-| **Downloads**| [![Downloads](https://static.pepy.tech/personalized-badge/pycaret?period=week&units=international_system&left_color=grey&right_color=blue&left_text=weekly%20(pypi))](https://pepy.tech/project/pycaret) [![Downloads](https://static.pepy.tech/personalized-badge/pycaret?period=month&units=international_system&left_color=grey&right_color=blue&left_text=monthly%20(pypi))](https://pepy.tech/project/pycaret) [![Downloads](https://static.pepy.tech/personalized-badge/pycaret?period=total&units=international_system&left_color=grey&right_color=blue&left_text=cumulative%20(pypi))](https://pepy.tech/project/pycaret) |
-| **License** | [![License](https://img.shields.io/pypi/l/ansicolortags.svg)](https://img.shields.io/pypi/l/ansicolortags.svg)
-| **Community** | [![Slack](https://img.shields.io/badge/slack-chat-green.svg?logo=slack)](https://join.slack.com/t/pycaret/shared_invite/zt-20gl4zb8k-L~ZQDyi9LtrV4dWxYpLE7A) |
+- [概要](#概要)
+- [プロジェクト構成](#プロジェクト構成)
+- [環境構築](#環境構築)
+- [データ処理フロー](#データ処理フロー)
+- [特徴量エンジニアリング](#特徴量エンジニアリング)
+- [使用方法](#使用方法)
+- [分析ノートブック](#分析ノートブック)
+- [出力データ](#出力データ)
+- [トラブルシューティング](#トラブルシューティング)
 
+---
 
+## 🎯 概要
 
-![alt text](docs/images/quick_start.gif)
+このプロジェクトは、コンビニエンスストアの売上・客数データを分析し、機械学習を用いて需要予測を行うシステムです。
 
-<div align="left">
+### 主な機能
 
-# Welcome to PyCaret
-PyCaret is an open-source, low-code machine learning library in Python that automates machine learning workflows. It is an end-to-end machine learning and model management tool that speeds up the experiment cycle exponentially and makes you more productive.
+- **Excelからの自動データ変換**: ワイド形式からロング形式への変換
+- **包括的な特徴量付与**: 250-300以上の特徴量を自動生成
+- **高度な時系列分析**: ラグ特徴、移動平均、変化率、トレンド分析
+- **気象データ統合**: Open-Meteo API による天気・気温データの取得
+- **昨年同日比較**: 前年同月同日との売上・客数・客単価の比較
+- **インタラクティブダッシュボード**: Jupyter ベースの探索的データ分析
+- **需要予測モデル**: PyCaret を使用した自動機械学習
 
-In comparison with the other open-source machine learning libraries, PyCaret is an alternate low-code library that can be used to replace hundreds of lines of code with few lines only. This makes experiments exponentially fast and efficient. PyCaret is essentially a Python wrapper around several machine learning libraries and frameworks such as scikit-learn, XGBoost, LightGBM, CatBoost, Optuna, Hyperopt, Ray, and few more.
+---
 
-The design and simplicity of PyCaret are inspired by the emerging role of citizen data scientists, a term first used by Gartner. Citizen Data Scientists are power users who can perform both simple and moderately sophisticated analytical tasks that would previously have required more technical expertise. PyCaret was inspired by the caret library in R programming language.
+## 📁 プロジェクト構成
 
-# 🚀 Installation
+```
+work/
+├── input/                          # 入力データ（Excelファイル）
+├── output/                         # 出力データ（CSV）
+│   ├── 01_*.csv                   # 売上情報（店別実績）
+│   ├── 06_*.csv                   # POS情報（商品別実績）
+│   ├── 06_cleaned_*.csv           # クリーンアップ済みデータ
+│   └── 06_final_enriched_*.csv    # 特徴量付与済み最終データ
+│
+├── batch_convert.py                # Excel一括変換スクリプト
+├── enrich_features_v2.py           # 特徴量付与スクリプト（完全版）
+├── merge_converted_06.py           # 06ファイル統合スクリプト
+├── clean_06_data.py                # データクリーンアップスクリプト
+├── wide_to_long.py                 # ワイド→ロング形式変換
+├── stores.csv                      # 店舗マスタ（緯度経度）
+│
+├── Stage1_現状把握分析.ipynb       # ステージ1: 現状分析
+├── Stage2_商品ABC分析.ipynb        # ステージ2: ABC分析
+├── Stage3_発注最適化分析.ipynb     # ステージ3: 発注最適化
+├── Stage4_外部要因分析.ipynb       # ステージ4: 外部要因
+├── Stage5_PyCaret需要予測.ipynb    # ステージ5: 需要予測
+│
+├── 店舗別包括ダッシュボード_v4_enhanced.ipynb  # 統合ダッシュボード
+├── 動的探索的データ分析ダッシュボード.ipynb    # EDA ダッシュボード
+└── README.md                       # このファイル
+```
 
-## 🌐 Option 1: Install via PyPi
-PyCaret is tested and supported on 64-bit systems with:
-- Python 3.9, 3.10, 3.11 and 3.12
-- Ubuntu 16.04 or later
-- Windows 7 or later
+---
 
-You can install PyCaret with Python's pip package manager:
+## 🛠️ 環境構築
 
-```python
-# install pycaret
+### 必要要件
+
+- Python 3.9 以上
+- pip パッケージマネージャー
+
+### 基本インストール
+
+```bash
+# PyCaretのインストール
 pip install pycaret
+
+# 必要なライブラリのインストール
+pip install pandas numpy openpyxl aiohttp scipy
 ```
 
-PyCaret's default installation will not install all the optional dependencies automatically. Depending on the use case, you may be interested in one or more extras:
+### GPU対応（オプション）
+
+RAPIDS cuML を使用する場合:
+
+```bash
+# RAPIDS cuMLのインストール（CUDA環境が必要）
+conda install -c rapidsai -c conda-forge -c nvidia \
+    cuml=24.04 python=3.10 cudatoolkit=11.8
+```
+
+---
+
+## 🔄 データ処理フロー
+
+### 1. Excel → CSV 変換
+
+```bash
+# 全Excelファイルを一括変換
+python3 batch_convert.py
+
+# デバッグモード（詳細ログ + 特徴量付与まで実行）
+python3 batch_convert.py --debug
+
+# 単一ファイルのみ処理
+python3 batch_convert.py --single-file "ファイル名.xlsx"
+```
+
+**処理内容:**
+- ヘッダー行と日付行の自動検出
+- ワイド形式からロング形式への変換
+- 集計行の自動除去
+- 階層データの前方埋め処理
+
+### 2. 06ファイルの統合とクリーンアップ
+
+```bash
+# 06ファイルの統合
+python3 merge_converted_06.py
+
+# データクリーンアップ
+python3 clean_06_data.py
+```
+
+**処理内容:**
+- 複数の06_POSファイルを統合
+- 重複データの削除
+- 欠損値の処理
+- データ型の最適化
+
+### 3. 特徴量付与（完全版）
+
+```bash
+# 特徴量付与の実行
+python3 enrich_features_v2.py \
+    output/06_cleaned_20250701_20250930.csv \
+    output/06_final_enriched_20250701_20250930.csv \
+    --store-locations stores.csv \
+    --past-year-data output/01_【売上情報】店別実績_20250903143116（20240901-20250831）.csv
+```
+
+**オプション:**
+- `--skip-weather`: 天気情報の取得をスキップ
+- `--debug`: デバッグモード
+
+---
+
+## 🧪 特徴量エンジニアリング
+
+### A. カレンダー特徴（約50個）
+
+#### 基本時間特徴
+- 年、月、日、曜日、週番号、年内日数
+
+#### 休日関連
+- 祝日フラグ、土曜フラグ、日曜フラグ、週末フラグ、平日フラグ
+- 休日タイプ（0=平日、1=土曜、2=日曜、3=祝日）
+- 休日前日、休日翌日、休日前々日
+
+#### 連休情報
+- 連休日数、連休中日番号、連休フラグ
+- 連休初日、連休2日目、連休最終日前日、連休最終日
+
+#### 大型連休
+- GW、GW前半、GW後半
+- 盆休み、年末年始、シルバーウィーク
+
+#### 月内位置
+- 給料日、給料日直後、月初、月初3日、月末、月末3日、月中旬
+
+#### 学校カレンダー
+- 夏休み、冬休み、春休み、学校休み、新学期
+
+#### 季節・四半期
+- 四半期（1-4）
+- 季節（1=春、2=夏、3=秋、4=冬）
+
+### B. 気象特徴（約80個）
+
+#### 基本気象データ（API取得）
+- 天気、最高気温、最低気温、降水量
+
+#### 気温派生特徴
+- 平均気温、気温差
+
+#### 気温閾値フラグ
+- 猛暑日（35℃以上）、真夏日（30℃以上）、夏日（25℃以上）
+- 冬日（最低気温 < 0℃）、真冬日（最高気温 < 0℃）
+- 快適温度（18-25℃）、暑い（> 28℃）、やや暑い（25-28℃）
+- 寒い（< 10℃）、やや寒い（10-15℃）
+
+#### 降水フラグ
+- 降雨フラグ、弱雨（1-5mm）、普通雨（5-10mm）、強雨（10-30mm）、豪雨（> 30mm）
+
+#### 気温ラグ・移動平均
+- 気温ラグ（t-1, t-7, t-14）
+- 気温移動平均（MA3, MA7, MA14）
+
+#### 気温変化量・変化率
+- 気温変化量（1日、7日、14日）
+- 気温変化率（1日、7日）
+
+#### 気温変化フラグ
+- 気温上昇_急_1d、気温下降_急_1d
+- 暖かくなった_7d、寒くなった_7d
+- 気温安定
+
+#### 降水特徴
+- 降水量ラグ（t-1, t-7）
+- 降水量累積（3日、7日、14日）
+- 降水量変化量（1日、7日）
+- 降水_開始、降水_終了
+- 連続降雨日数、連続晴天日数
+
+#### 気温トレンド
+- 気温トレンド_7d、気温トレンド_14d
+
+### C. 時系列特徴（売上・客数・客単価）
+
+各指標（売上、客数、客単価）について以下を計算:
+
+#### ラグ特徴
+- t-1, t-2, t-3, t-7, t-14
+
+#### 移動平均
+- MA3, MA7, MA14, MA28
+
+#### 移動標準偏差・変動係数
+- STD7, STD14, CV7, CV14
+
+#### 変化量
+- 変化量_1d, 変化量_7d, 変化量_14d
+- 変化量_vs_MA7, 変化量_vs_MA14
+- 変化量_週次（MA7の1週間差）
+
+#### 変化率
+- 変化率_1d, 変化率_7d, 変化率_14d（百分率）
+- 変化率_vs_MA7, 変化率_vs_MA14
+- 成長率_週次
+
+#### 方向性フラグ
+- 増加_1d, 減少_1d, 増加_7d, 減少_7d
+- 急増_7d, 急減_7d
+- MA7超、MA14超
+
+#### 極値・レンジ
+- MAX7, MAX14, MIN7, MIN14
+- レンジ7, レンジ14
+
+#### トレンド（線形回帰の傾き）
+- トレンド_7d、トレンド_14d
+
+### D. 季節変動指数・客数指数（前年データベース）
+
+#### 季節変動指数
+- 季節変動指数_月（前年同月平均 ÷ 前年年間平均）
+- 季節変動指数_週（前年同週平均 ÷ 前年年間平均）
+
+#### 季節変動指数の変化
+- 季節変動指数_変化量_月/週
+- 季節変動指数_変化率_月/週
+
+#### 季節フラグ
+- 季節_ピーク期（指数 > 1.2）
+- 季節_オフ期（指数 < 0.8）
+- 季節_上昇期（変化量 > 0.05）
+- 季節_下降期（変化量 < -0.05）
+
+#### 客数指数
+- 客数指数（前年同月平均客数 ÷ 前年年間平均客数）
+
+### E. 昨年同日比較特徴（NEW!）
+
+#### 昨年同日データ
+- 昨年同日_売上
+- 昨年同日_客数
+- 昨年同日_客単価
+
+#### 昨年同日との比較
+- **売上**: 昨年同日比_売上_変化量、変化率、増加フラグ、減少フラグ
+- **客数**: 昨年同日比_客数_変化量、変化率、増加フラグ、減少フラグ
+- **客単価**: 昨年同日比_客単価_変化量、変化率、増加フラグ、減少フラグ
+
+**データカバー率**: 約92.4%（前年データが存在する日付のみ）
+
+---
+
+## 📊 使用方法
+
+### 完全な処理フロー
+
+```bash
+# 1. Excelファイルを input/ ディレクトリに配置
+
+# 2. 一括変換と特徴量付与を実行
+python3 batch_convert.py --debug
+
+# 3. 出力ファイルを確認
+ls -lh output/06_final_enriched_*.csv
+```
+
+### 個別スクリプトの実行
+
+```bash
+# Excel → CSV 変換のみ
+python3 batch_convert.py
+
+# 特徴量付与のみ（既存のCSVに対して）
+python3 enrich_features_v2.py \
+    input.csv \
+    output.csv \
+    --store-locations stores.csv \
+    --past-year-data past_year.csv
+```
+
+---
+
+## 📓 分析ノートブック
+
+### ステージ別分析
+
+1. **Stage1_現状把握分析.ipynb**
+   - 基本統計量の確認
+   - 売上・客数トレンドの可視化
+   - 店舗別・時系列パフォーマンス分析
+
+2. **Stage2_商品ABC分析.ipynb**
+   - ABC分析による商品分類
+   - 重点管理商品の特定
+   - 在庫最適化の提案
+
+3. **Stage3_発注最適化分析.ipynb**
+   - 発注量の最適化
+   - リードタイムの考慮
+   - 欠品・過剰在庫の削減
+
+4. **Stage4_外部要因分析.ipynb**
+   - 気象データとの相関分析
+   - 曜日・祝日効果の分析
+   - イベント影響の定量化
+
+5. **Stage5_PyCaret需要予測.ipynb**
+   - PyCaret による自動機械学習
+   - モデル比較と選択
+   - 予測精度の評価
+
+### ダッシュボード
+
+- **店舗別包括ダッシュボード_v4_enhanced.ipynb**
+  - 統合分析ダッシュボード
+  - インタラクティブな可視化
+  - 店舗間比較分析
+
+- **動的探索的データ分析ダッシュボード.ipynb**
+  - EDA（探索的データ分析）
+  - 動的フィルタリング
+  - カスタム可視化
+
+---
+
+## 📦 出力データ
+
+### 主要な出力ファイル
+
+| ファイル | 説明 | 列数（概算） |
+|---------|------|--------------|
+| `01_【売上情報】店別実績_*.csv` | 店別日次売上データ（ロング形式） | 5-10 |
+| `06_cleaned_*.csv` | クリーンアップ済みPOSデータ | 10-15 |
+| `06_final_enriched_*.csv` | **特徴量付与済み最終データ** | **250-300+** |
+
+### 最終データの特徴
+
+- **行数**: 約80,000行（店舗×日付×商品）
+- **列数**: 250-300列以上
+- **データ期間**: 2024年9月～2025年8月（約1年間）
+- **データサイズ**: 約70-100MB（CSV形式）
+
+---
+
+## 🔧 トラブルシューティング
+
+### よくある問題
+
+#### 1. 天気API取得エラー
+
+```bash
+# 天気情報をスキップして実行
+python3 enrich_features_v2.py input.csv output.csv --skip-weather
+```
+
+#### 2. メモリ不足エラー
 
 ```python
-# install analysis extras
-pip install pycaret[analysis]
-
-# models extras
-pip install pycaret[models]
-
-# install tuner extras
-pip install pycaret[tuner]
-
-# install mlops extras
-pip install pycaret[mlops]
-
-# install parallel extras
-pip install pycaret[parallel]
-
-# install test extras
-pip install pycaret[test]
-
-# install dev extras
-pip install pycaret[dev]
-
-##
-
-# install multiple extras together
-pip install pycaret[analysis,models]
+# チャンク読み込みを使用
+df = pd.read_csv('large_file.csv', chunksize=10000)
 ```
 
-Check out all [optional dependencies](https://github.com/pycaret/pycaret/blob/master/requirements-optional.txt). If you want to install everything including all the optional dependencies:
+#### 3. 日本語文字化け
 
 ```python
-# install full version
-pip install pycaret[full]
-```
-## 📄 Option 2: Build from Source
-Install the development version of the library directly from the source. The API may be unstable. It is not recommended for production use.
-
-```python
-pip install git+https://github.com/pycaret/pycaret.git@master --upgrade
+# エンコーディングを明示的に指定
+df = pd.read_csv('file.csv', encoding='utf-8-sig')
 ```
 
-## 📦 Option 3: Docker
-Docker creates virtual environments with containers that keep a PyCaret installation separate from the rest of the system. PyCaret docker comes pre-installed with a Jupyter notebook. It can share resources with its host machine (access directories, use the GPU, connect to the Internet, etc.). The PyCaret Docker images are always tested for the latest major releases.
+#### 4. GPU環境の問題
 
-```python
-# default version
-docker run -p 8888:8888 pycaret/slim
+```bash
+# GPU環境の確認
+python3 check_gpu_environment.py
 
-# full version
-docker run -p 8888:8888 pycaret/full
+# CPU モードで実行
+python3 script.py --no-gpu
 ```
 
-## 🏃‍♂️ Quickstart
+### ログファイル
 
-### 1. Functional API
-```python
-# Classification Functional API Example
+詳細なログは `logs.log` に出力されます:
 
-# loading sample dataset
-from pycaret.datasets import get_data
-data = get_data('juice')
+```bash
+# ログの確認
+tail -f logs.log
 
-# init setup
-from pycaret.classification import *
-s = setup(data, target = 'Purchase', session_id = 123)
-
-# model training and selection
-best = compare_models()
-
-# evaluate trained model
-evaluate_model(best)
-
-# predict on hold-out/test set
-pred_holdout = predict_model(best)
-
-# predict on new data
-new_data = data.copy().drop('Purchase', axis = 1)
-predictions = predict_model(best, data = new_data)
-
-# save model
-save_model(best, 'best_pipeline')
+# エラーのみ抽出
+grep ERROR logs.log
 ```
 
-### 2. OOP API
+---
 
-```python
-# Classification OOP API Example
+## 📈 パフォーマンス最適化
 
-# loading sample dataset
-from pycaret.datasets import get_data
-data = get_data('juice')
+### 並列処理
 
-# init setup
-from pycaret.classification import ClassificationExperiment
-s = ClassificationExperiment()
-s.setup(data, target = 'Purchase', session_id = 123)
-
-# model training and selection
-best = s.compare_models()
-
-# evaluate trained model
-s.evaluate_model(best)
-
-# predict on hold-out/test set
-pred_holdout = s.predict_model(best)
-
-# predict on new data
-new_data = data.copy().drop('Purchase', axis = 1)
-predictions = s.predict_model(best, data = new_data)
-
-# save model
-s.save_model(best, 'best_pipeline')
+```bash
+# 4ワーカーで並列実行
+python3 batch_convert.py --workers 4
 ```
 
+### キャッシュの活用
 
-## 📁 Modules
-<div align="center">
+- 祝日データは30日間キャッシュされます（`.holidays_cache.csv`）
+- 天気データは日付・店舗ごとにキャッシュされます
 
-## **Classification**
+---
 
-  Functional API           |  OOP API
-:-------------------------:|:-------------------------:
-![](docs/images/classification_functional.png)  | ![](docs/images/classification_OOP.png)
+## 📝 ライセンス
 
-## **Regression**
+このプロジェクトは PyCaret のライセンスに準拠します。
 
-  Functional API           |  OOP API
-:-------------------------:|:-------------------------:
-![](docs/images/regression_functional.png)  | ![](docs/images/regression_OOP.png)
+---
 
-## **Time Series**
+## 🤝 貢献
 
-  Functional API           |  OOP API
-:-------------------------:|:-------------------------:
-![](docs/images/time_series_functional.png)  | ![](docs/images/time_series_OOP.png)
+バグ報告や機能リクエストは Issue にてお願いします。
 
-## **Clustering**
+---
 
-  Functional API           |  OOP API
-:-------------------------:|:-------------------------:
-![](docs/images/clustering_functional.png)  | ![](docs/images/clustering_OOP.png)
+## 📞 サポート
 
-## **Anomaly Detection**
+- PyCaret公式ドキュメント: https://pycaret.gitbook.io/
+- PyCaret Slack: https://join.slack.com/t/pycaret/shared_invite/...
 
-  Functional API           |  OOP API
-:-------------------------:|:-------------------------:
-![](docs/images/anomaly_functional.png)  | ![](docs/images/anomaly_OOP.png)
+---
 
-<div align="left">
+## 📅 更新履歴
 
-# 👥 Who should use PyCaret?
-PyCaret is an open source library that anybody can use. In our view the ideal target audience of PyCaret is: <br />
+### v2.0.0 (2025-10-08)
+- ✨ 昨年同日比較特徴を追加（売上・客数・客単価）
+- ✨ 特徴量を250-300+に拡張
+- ✨ データカバー率92.4%を達成
+- 🐛 メモリ最適化とパフォーマンス改善
 
-- Experienced Data Scientists who want to increase productivity.
-- Citizen Data Scientists who prefer a low code machine learning solution.
-- Data Science Professionals who want to build rapid prototypes.
-- Data Science and Machine Learning students and enthusiasts.
+### v1.5.0
+- 気象特徴の追加（Open-Meteo API統合）
+- 時系列特徴の拡張（変化率・トレンド分析）
 
-# 🎮 Training on GPUs
-To train models on the GPU, simply pass use_gpu = True in the setup function. There is no change in the use of the API; however, in some cases, additional libraries have to be installed. The following models can be trained on GPUs:
+### v1.0.0
+- 初版リリース
+- 基本的なデータ変換・特徴量付与機能
 
-- Extreme Gradient Boosting
-- CatBoost
-- Light Gradient Boosting Machine requires [GPU installation](https://lightgbm.readthedocs.io/en/latest/GPU-Tutorial.html)
-- Logistic Regression, Ridge Classifier, Random Forest, K Neighbors Classifier, K Neighbors Regressor, Support Vector Machine, Linear Regression, Ridge Regression, Lasso Regression requires [cuML >= 0.15](https://github.com/rapidsai/cuml)
+---
 
-# 🖥️ PyCaret Intel sklearnex support
-You can apply [Intel optimizations](https://github.com/intel/scikit-learn-intelex) for machine learning algorithms and speed up your workflow. To train models with Intel optimizations use `sklearnex` engine. There is no change in the use of the API, however, installation of Intel sklearnex is required:
-
-```python
-pip install scikit-learn-intelex
-```
-
-# 🤝 Contributors
-<a href="https://github.com/pycaret/pycaret/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=pycaret/pycaret" width=600/>
-</a>
-
-# 📝 License
-PyCaret is completely free and open-source and licensed under the [MIT](https://github.com/pycaret/pycaret/blob/master/LICENSE) license.
-
-# ℹ️ More Information
-
-| Important Links              |            Description                                       |
-| -------------------------- | -------------------------------------------------------------- |
-| :star: **[Tutorials]**        | Tutorials developed and maintained by core developers       |
-| :clipboard: **[Example Notebooks]** | Example notebooks created by community               |
-| :orange_book: **[Blog]** | Official blog by creator of PyCaret                      |
-| :books: **[Documentation]**      | API docs                              |
-| :tv: **[Videos]**            | Video resources             |
-| ✈️ **[Cheat sheet]**            | Community Cheat sheet            |
-| :loudspeaker: **[Discussions]**        | Community Discussion board on GitHub|
-| :hammer_and_wrench: **[Release Notes]**          | Release Notes          |
-
-[tutorials]: https://pycaret.gitbook.io/docs/get-started/tutorials
-[Example notebooks]: https://github.com/pycaret/examples
-[Blog]: https://pycaret.gitbook.io/docs/learn-pycaret/official-blog
-[Documentation]: https://pycaret.gitbook.io/docs/
-[Videos]: https://pycaret.gitbook.io/docs/learn-pycaret/videos
-[Cheat sheet]: https://pycaret.gitbook.io/docs/learn-pycaret/cheat-sheet
-[Discussions]: https://github.com/pycaret/pycaret/discussions
-[Release Notes]: https://github.com/pycaret/pycaret/releases
+**作成者**: AI発注計画チーム
+**最終更新**: 2025年10月8日
