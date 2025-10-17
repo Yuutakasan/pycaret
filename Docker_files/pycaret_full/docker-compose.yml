@@ -39,6 +39,7 @@ services:
     volumes:
       # 作業ディレクトリ（HOST_WORK_DIRがあれば優先。無ければ相対パス）
       - ${HOST_WORK_DIR:-../../work}:/home/rapids/work:rw
+      - ${HOST_WORK_DIR:-../../work}:/work:rw
       # キャッシュディレクトリ
       - ./cache/cupy:/tmp/cupy_cache:rw
       - ./cache/numba:/tmp/numba_cache:rw
